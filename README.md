@@ -140,20 +140,80 @@ Neural networks using the Fashion-MNIST dataset likely achieved lower accuracy t
 
 ## Extension 3: Support Vector Machine with Soft Margin
 
-Often times, real-world data is presented in a form that is not perfectly linearly separable. It may be possible to create boundaries between classes, but this will result in overfitting, and the model will not be useful on new data. Soft margin SVMs work around this issue by tolerating a few misclassifications on either side of the margin. This is accomplished by introducing a slack variable 𝛇 for each training example. Thus, the hyperplane to be used must satisfy y = (w^T•x + w_0) ≥ 1 - 𝛇 and 𝛇 ≥ 0. It is therefore necessary to minimize (1/2)||w||^2 + CΣ𝛇 subject to these constraints. C is a tunable parameter which decides the tradeoff between maximizing the margin and minimizing mistakes. A large value of C causes the model to focus more on avoiding misclassifications while keeping the margin small, and a small value of C causes the model to allow more misclassifications while maximizing the margin.
+Often times, real-world data is presented in a form that is not perfectly linearly separable. It may be possible to create boundaries between classes, but this will result in overfitting, and the model will not be useful on new data. Soft margin SVMs work around this issue by tolerating a few misclassifications on either side of the margin. This is accomplished by introducing a slack variable 𝛇 for each training example. Thus, the hyperplane to be used must satisfy y = (w^T•x + w_0) ≥ 1 - 𝛇 and 𝛇 ≥ 0. It is therefore necessary to minimize (1/2)||w||^2 + CΣ𝛇 subject to these constraints. C is a tunable parameter which decides the tradeoff between maximizing the margin and minimizing mistakes. A smaller value of C makes the margin larger, thereby permitting more misclassifications. 
 
 ### scikit-learn Implementation
 
+In his [lecture](https://people.eecs.berkeley.edu/~jordan/courses/281B-spring04/lectures/lec6.pdf) on soft margin SVM at UC Berkeley, [Michael I. Jordan](https://en.wikipedia.org/wiki/Michael_I._Jordan) states that using a value of C = 1 by "by default does not work very well, while 1/n may work better." He also recommends determining C through cross validation. Thus, three values of C are tested here (1e-5, 1e-3, 1e-2), and their results are validated through 20-fold cross validation:
+
+```python
+
+from sklearn.model_selection import KFold
+from statistics import mean
+
+kf = KFold(n_splits=20, shuffle=True)
+kf.get_n_splits(X)
+
+# Values of C to test
+C = [1e-5, 1e-3, 1e-2]
+
+avg_acc = []
+# Perform cross validation for each value of C
+for i in range(len(C)):
+    
+    acc = []
+    for train, test in kf.split(X):
+        clf = svm.SVC(kernel='poly', C=C[i], gamma='auto')
+        clf.fit(X[train], y[train])
+        y_pred = clf.predict(X_test)
+        acc.append(accuracy_score(y_test, y_pred) * 100)
+    avg_acc.append(mean(acc))
+    acc = []
+    print("C = %s" %(C[i]))
+    print(avg_acc[i])
+ ```
+
 ### NumPy Implementation
+
+The library [CVXOPT](https://cvxopt.org) is used as the convex quadratic optimization solver, and the optimal value of C determined earlier (1e-2) is used:
+
+```python 
+def kernel_soft_margin_svm(X, y, C): 
+
+    m,n = X.shape
+    y = y.reshape(-1,1)
+    X_y = X*y
+    H = np.dot(X_y, X_y.T)
+    
+    P = matrix(H)
+    q = matrix(-np.ones((m, 1)))
+    
+    # Changed G and h
+    G = matrix(np.vstack((np.diag(np.ones(m))*-1, np.identity(m))))
+    h = matrix(np.hstack((np.zeros(m), np.ones(m)*C)))
+    
+    A = matrix(y.reshape(1,-1))
+    A = matrix(A, (1, m), 'd')
+    b = matrix(np.zeros(1))
+    
+    sol = solvers.qp(P,q,G,h,A,b) 
+    
+    alphas = np.array(sol['x'])[:,0]
+    
+    return alphas
+
+# fit svm dual classifier
+alphas = kernel_soft_margin_svm(X_train, y_train, 0.01)
+```
 
 ### Summary of Accuracies for Extension 3
 
  |  | **MNIST** | **Fashion-MNIST** |                 
  | :---: | :---: | :---: |   
- | **scikit-learn Baseline** | 86.1 | 9.9 |
- | **scikit-learn Baseline + Extension** | 96.0 | 11.8 |
- | **NumPy Baseline** | 96.4 | 62.7 |            
- | **NumPy Baseline + Extension** | 97.7 | 77.2 |  
+ | **scikit-learn Baseline** | 92.0 | 94.4 |
+ | **scikit-learn Baseline + Extension** | 51.1 | 54.4 |
+ | **NumPy Baseline** | 89.7 | 94.8 |            
+ | **NumPy Baseline + Extension** | 78.9 | 22.5 |  
  
 A drop in accuracy was seen when using the Numpy extension on the Fashion-MNIST dataset which could be due to the fact that only 40% of the full dataset was used for the training set. The optimal train-test split for this particular dataset can be further explored using cross-validation.
  
