@@ -74,8 +74,89 @@ def feed_forward_with_softmax(x, W, b, nn_structure):
  | **NumPy Baseline** | 88.5 | 11.3 |            
  | **NumPy Baseline + Extension** | 95.4 | 53.0|  
  
-Accuracy was lower overall when using Fashion-MNIST than MNIST. This is likely because Fashion-MNIST consists of 28x28 images of clothes compared to the 8x8 images of handwritten digits in MNIST. The large increase in features makes high accuracy more challenging to achieve for a given neural network. Additionally, each class in the Fashion-MNIST dataset consists of a category of clothes which may have greater intra-class variation than in MNIST. For example, the following is a sample from the t-shirt class in Fashion-MNIST:
+The NumPy extension implemented from scratch proved to be successful in improving accuracy over the NumPy baseline. However, accuracy was lower overall when using Fashion-MNIST than MNIST. This is likely because Fashion-MNIST consists of 28x28 images of clothes compared to the 8x8 images of handwritten digits in MNIST. The large increase in features makes high accuracy more challenging to achieve for a given neural network. Additionally, each class in the Fashion-MNIST dataset consists of a category of clothes which may have greater intra-class variation than in MNIST. For example, the following is a sample from the t-shirt class in Fashion-MNIST:
 
 <p align="center">
 <img src="images/fashion_mnist_example.png"  alt="drawing" width="450"/>
 </p>
+
+
+## Extension 2: Neural Network with Dropout Regularization
+
+Similar to other machine learning models, neural networks are susceptible to overfitting when trained on a relatively small datasets. This results in high variance which makes it unreliable for evaluating unseen data. Dropout is a method of regularization that is used to prevent this issue by approximating the simultaneous training of a large number of neural networks with different architectures. It accomplishes this by randomly ignoring a certain number of layer outputs (can be input and/or one or more hidden layers) during training which has the effect of making the layer seem like a layer with a different number of nodes than before. Temporarily removing random nodes forces other nodes within a given layer to take on more or less responsibility for inputs thereby adding noise to the training process. As a result, later layers must co-adapt in order to correct errors from the prior layers which ultimately makes the neural network more robust. When dropout is used on a given layer, weights become larger than normal. In order to combat this, it is necessary to increase the number of weights by a factor that is inversely proportional to the chosen dropout rate (for example, if a layer has 100 nodes, and a dropout rate of 0.5 is chosen, the number of nodes in that layer must be augmented to 200).
+
+### Keras Implementation
+In addition to adding dropout layers, the ```kernel_constraint``` argument is set to ```maxnorm(3)``` as recommended in the original paper on Dropout.
+```python
+from keras.layers import Dropout
+from keras.constraints import maxnorm
+
+# Define the keras model with softmax outer layer
+model_plus_ext = Sequential()
+model_plus_ext.add(Dense(64, activation='sigmoid', kernel_constraint = maxnorm(3)))
+model_plus_ext.add(Dropout(0.2))
+model_plus_ext.add(Dense(30, activation='sigmoid', kernel_constraint = maxnorm(3)))
+model_plus_ext.add(Dropout(0.2))
+model_plus_ext.add(Dense(10, activation='sigmoid'))
+```
+
+### NumPy Implementation
+Parameters for configuration of the dropout rates for the input and hidden layers were added to the ```setup_and_init_weights_with_dropout``` function. Within this function, ```active_input_nodes``` and ```active_hidden nodes``` are variables containing the number of active nodes in both the input and hidden layers after setting the dropout rate, and ```active_input_indices``` and ```active_hidden_indices``` are variables containing the indices of randomly removed nodes in each layer. The subsequent loops use active_input_indices and active_hidden_indices to actually remove these weights from the original dictionary  of weights.
+
+```python
+def setup_and_init_weights_with_dropout(nn_structure, input_dropout_rate, hidden_dropout_rate):
+    W = {} #creating a dictionary i.e. a set of key: value pairs
+    b = {}
+    for l in range(1, len(nn_structure)):
+        W[l] = r.random_sample((nn_structure[l], nn_structure[l-1])) #Return “continuous uniform” random floats in the half-open interval [0.0, 1.0). 
+        b[l] = r.random_sample((nn_structure[l],))
+    return W, b
+
+    active_input_nodes = int(nn_structure[0]*(1 - input_dropout_rate))
+    active_input_indices = sorted(random.sample(range(0, nn_structure[0]), active_input_nodes))
+    active_hidden_nodes = int(nn_structure[1]*(1 - input_dropout_rate))
+    active_hidden_indices = sorted(random.sample(range(0, nn_structure[1]), active_input_nodes))
+    
+    # Randomly remove weights from input layer
+    for i in range(len(active_input_indices)):
+        W[1].remove(active_input_indices[i])
+    
+    # Randomly remove weights from hidden layer
+    for i in range(len(active_input_indices)):
+        W[2].remove(active_input_indices[i])
+```
+
+### Summary of Accuracies for Extension 2
+
+ |  | **MNIST** | **Fashion-MNIST** |                 
+ | :---: | :---: | :---: |   
+ | **Keras Baseline** | 86.1 | 9.9 |
+ | **Keras Baseline + Extension** | 96.0 | 11.8 |
+ | **NumPy Baseline** | 96.4 | 62.7 |            
+ | **NumPy Baseline + Extension** | 97.7 | 77.2 |  
+ 
+Neural networks using the Fashion-MNIST dataset likely achieved lower accuracy than those using the MNIST dataset for a similar reason as when implementing softmax: the Fashion-MNIST dataset uses higher dimensional images whose classes exhibit more intra-class variation than its MNIST counterpart. Regardless, the NumPy implementation of dropout regularization was successful since accuracies improved for both datasets over the NumPy baseline.
+
+
+## Extension 3: Support Vector Machine with Soft Margin
+
+Often times, real-world data is presented in a form that is not perfectly linearly separable. It may be possible to create boundaries between classes, but this will result in overfitting, and the model will not be useful on new data. Soft margin SVMs work around this issue by tolerating a few misclassifications on either side of the margin. This is accomplished by introducing a slack variable 𝛇 for each training example. Thus, the hyperplane to be used must satisfy y = (w^T•x + w_0) ≥ 1 - 𝛇 and 𝛇 ≥ 0. It is therefore necessary to minimize (1/2)||w||^2 + CΣ𝛇 subject to these constraints. C is a tunable parameter which decides the tradeoff between maximizing the margin and minimizing mistakes. A large value of C causes the model to focus more on avoiding misclassifications while keeping the margin small, and a small value of C causes the model to allow more misclassifications while maximizing the margin.
+
+### scikit-learn Implementation
+
+### NumPy Implementation
+
+### Summary of Accuracies for Extension 3
+
+ |  | **MNIST** | **Fashion-MNIST** |                 
+ | :---: | :---: | :---: |   
+ | **scikit-learn Baseline** | 86.1 | 9.9 |
+ | **scikit-learn Baseline + Extension** | 96.0 | 11.8 |
+ | **NumPy Baseline** | 96.4 | 62.7 |            
+ | **NumPy Baseline + Extension** | 97.7 | 77.2 |  
+ 
+A drop in accuracy was seen when using the Numpy extension on the Fashion-MNIST dataset which could be due to the fact that only 40% of the full dataset was used for the training set. The optimal train-test split for this particular dataset can be further explored using cross-validation.
+ 
+
+
+
