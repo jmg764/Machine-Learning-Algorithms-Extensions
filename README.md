@@ -145,12 +145,13 @@ Often times, real-world data is presented in a form that is not perfectly linear
 Larger C –– Harder Margin | Smaller C –– Softer Margin
 :-----: | :-----:
 <img src="images/harder_margin.png"  alt="drawing" width="400"/> | <img src="images/softer_margin.png"  alt="drawing" width="400"/>
-From scikit-learn's [documentation](https://scikit-learn.org/stable/auto_examples/svm/plot_svm_margin.html) on SVM.
+
+Images from scikit-learn's [documentation](https://scikit-learn.org/stable/auto_examples/svm/plot_svm_margin.html) on SVM.
 
 
 ### scikit-learn Implementation
 
-In his [lecture](https://people.eecs.berkeley.edu/~jordan/courses/281B-spring04/lectures/lec6.pdf) on soft margin SVM at UC Berkeley, [Michael I. Jordan](https://en.wikipedia.org/wiki/Michael_I._Jordan) states that using a value of C = 1 by "by default does not work very well, while 1/n may work better." He also recommends determining C through cross validation. Thus, three values of C are tested here (1e-5, 1e-3, 1e-2), and their results are validated through 20-fold cross validation:
+In his [lecture](https://people.eecs.berkeley.edu/~jordan/courses/281B-spring04/lectures/lec6.pdf) on soft margin SVM at UC Berkeley, [Michael I. Jordan](https://en.wikipedia.org/wiki/Michael_I._Jordan) recommends determining C through cross validation. Thus, five values of C are tested here (1e-5, 1e-3, 1e-2, 1, 1.5), and their results are validated through 20-fold cross validation:
 
 ```python
 
@@ -161,7 +162,7 @@ kf = KFold(n_splits=20, shuffle=True)
 kf.get_n_splits(X)
 
 # Values of C to test
-C = [1e-5, 1e-3, 1e-2]
+C = [1e-5, 1e-3, 1e-2, 1, 1.5]
 
 avg_acc = []
 # Perform cross validation for each value of C
@@ -216,13 +217,11 @@ alphas = kernel_soft_margin_svm(X_train, y_train, 0.01)
 
  |  | **MNIST** | **Fashion-MNIST** |                 
  | :---: | :---: | :---: |   
- | **scikit-learn Baseline** | 92.0 | 94.4 |
- | **scikit-learn Baseline + Extension** | 99.5 | 99.5 |
- | **NumPy Baseline** | 79.8 | 84.5 |            
- | **NumPy Baseline + Extension** | 78.9 | 44.1 |  
- 
-A drop in accuracy was seen when using the Numpy extension on the Fashion-MNIST dataset which could be due to the fact that only 40% of the full dataset was used for the training set. The optimal train-test split for this particular dataset can be further explored using cross-validation.
- 
-Extension was successful for MNIST
+ | **scikit-learn Baseline** | 98.1 | 95.3 |
+ | **scikit-learn Baseline + Extension** | 99.9 | 99.7 |
+ | **NumPy Baseline** | 79.8 | 87.3 |            
+ | **NumPy Baseline + Extension** | 84.0 | 89.7 |  
+
+The implementation of soft margin SVM using NumPy and CVXOPT successfully resulted in accuracy improvements for both MNIST and Fashion-MNIST.
 
 
