@@ -140,14 +140,13 @@ Neural networks using the Fashion-MNIST dataset likely achieved lower accuracy t
 
 ## Extension 3: Support Vector Machine with Soft Margin
 
-Often times, real-world data is presented in a form that is not perfectly linearly separable. It may be possible to create boundaries between classes, but this will result in overfitting, and the model will not be useful on new data. Soft margin SVMs work around this issue by tolerating a few misclassifications on either side of the margin. This is accomplished by introducing a slack variable 𝛇 for each training example. Thus, the hyperplane to be used must satisfy y = (w^T•x + w_0) ≥ 1 - 𝛇 and 𝛇 ≥ 0. It is therefore necessary to minimize (1/2)||w||^2 + CΣ𝛇 subject to these constraints. C is a tunable parameter which decides the tradeoff between maximizing the margin and minimizing mistakes. A smaller value of C makes the margin larger, thereby permitting more misclassifications. 
+Often times, real-world data is presented in a form that is not perfectly linearly separable. It may be possible to create boundaries between classes, but this will result in overfitting, and the model will not be useful on new data. Soft margin SVMs work around this issue by tolerating a few misclassifications on either side of the margin. This is accomplished by introducing a slack variable 𝛇 for each training example. Thus, the hyperplane to be used must satisfy y = (w^T•x + w_0) ≥ 1 - 𝛇 and 𝛇 ≥ 0. It is therefore necessary to minimize (1/2)||w||^2 + CΣ𝛇 subject to these constraints. C is a tunable parameter which decides the tradeoff between maximizing the margin and minimizing mistakes. A smaller value of C creates a softer (larger), thereby permitting more misclassifications. 
 
-<p align="left">
-<img src="images/hard_margin.png"  alt="drawing" width="400"/>
-</p>
-<p align="right">
-<img src="images/soft_margin.png"  alt="drawing" width="400"/>
-</p>
+Larger C –– Harder Margin | Smaller C –– Softer Margin
+:-----: | :-----:
+<img src="images/harder_margin.png"  alt="drawing" width="400"/> | <img src="images/softer_margin.png"  alt="drawing" width="400"/>
+From scikit-learn's [documentation](https://scikit-learn.org/stable/auto_examples/svm/plot_svm_margin.html) on SVM.
+
 
 ### scikit-learn Implementation
 
