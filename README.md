@@ -130,10 +130,10 @@ def setup_and_init_weights_with_dropout(nn_structure, input_dropout_rate, hidden
 
  |  | **MNIST** | **Fashion-MNIST** |                 
  | :---: | :---: | :---: |   
- | **Keras Baseline** | 86.1 | 9.9 |
- | **Keras Baseline + Extension** | 96.0 | 11.8 |
- | **NumPy Baseline** | 96.4 | 62.7 |            
- | **NumPy Baseline + Extension** | 97.7 | 77.2 |  
+ | **Keras Baseline** | 96.4 | 62.7 |
+ | **Keras Baseline + Extension** | 97.7 | 77.2 |
+ | **NumPy Baseline** | 86.1 | 9.9 |
+ | **NumPy Baseline + Extension** | 96.0 | 11.8 |   
  
 Neural networks using the Fashion-MNIST dataset likely achieved lower accuracy than those using the MNIST dataset for a similar reason as when implementing softmax: the Fashion-MNIST dataset uses higher dimensional images whose classes exhibit more intra-class variation than its MNIST counterpart. Regardless, the NumPy implementation of dropout regularization was successful since accuracies improved for both datasets over the NumPy baseline.
 
@@ -141,6 +141,13 @@ Neural networks using the Fashion-MNIST dataset likely achieved lower accuracy t
 ## Extension 3: Support Vector Machine with Soft Margin
 
 Often times, real-world data is presented in a form that is not perfectly linearly separable. It may be possible to create boundaries between classes, but this will result in overfitting, and the model will not be useful on new data. Soft margin SVMs work around this issue by tolerating a few misclassifications on either side of the margin. This is accomplished by introducing a slack variable 𝛇 for each training example. Thus, the hyperplane to be used must satisfy y = (w^T•x + w_0) ≥ 1 - 𝛇 and 𝛇 ≥ 0. It is therefore necessary to minimize (1/2)||w||^2 + CΣ𝛇 subject to these constraints. C is a tunable parameter which decides the tradeoff between maximizing the margin and minimizing mistakes. A smaller value of C makes the margin larger, thereby permitting more misclassifications. 
+
+<p align="left">
+<img src="images/hard_margin.png"  alt="drawing" width="400"/>
+</p>
+<p align="right">
+<img src="images/soft_margin.png"  alt="drawing" width="400"/>
+</p>
 
 ### scikit-learn Implementation
 
@@ -211,12 +218,12 @@ alphas = kernel_soft_margin_svm(X_train, y_train, 0.01)
  |  | **MNIST** | **Fashion-MNIST** |                 
  | :---: | :---: | :---: |   
  | **scikit-learn Baseline** | 92.0 | 94.4 |
- | **scikit-learn Baseline + Extension** | 51.1 | 54.4 |
- | **NumPy Baseline** | 89.7 | 94.8 |            
- | **NumPy Baseline + Extension** | 78.9 | 22.5 |  
+ | **scikit-learn Baseline + Extension** | 99.5 | 99.5 |
+ | **NumPy Baseline** | 79.8 | 84.5 |            
+ | **NumPy Baseline + Extension** | 78.9 | 44.1 |  
  
 A drop in accuracy was seen when using the Numpy extension on the Fashion-MNIST dataset which could be due to the fact that only 40% of the full dataset was used for the training set. The optimal train-test split for this particular dataset can be further explored using cross-validation.
  
-
+Extension was successful for MNIST
 
 
